@@ -51,3 +51,7 @@ class RedmineClient(object):
             raise Exception('Unable to create redmine ticket')
 
         return response
+
+    def get_issue(self, issue_id):
+        response = self.request('GET', '/issues/{}.json'.format(issue_id))
+        return response
