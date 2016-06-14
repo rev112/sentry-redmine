@@ -114,3 +114,28 @@ class RedmineOptionsForm(forms.Form):
 class RedmineNewIssueForm(forms.Form):
     title = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'class': 'span9'}))
     description = forms.CharField(widget=forms.Textarea(attrs={'class': 'span9'}))
+
+    task_exists = forms.BooleanField(
+        label='Link with existing task', required=False
+    )
+    existing_task_number = forms.IntegerField(
+        label='Existing task ID', required=False
+    )
+
+    def clean(self):
+        task_exists = self.cleaned_data.get('task_exists')
+        existing_task_number = self.cleaned_data.get('existing_task_number')
+
+        if not task_exists and existing_task_number:
+            raise forms.ValidationError(
+                'Mark the "Link with existing task" the checkbox if you '
+                'want to link this issue with the existing task'
+            )
+
+        if task_exists and not existing_task_number:
+            raise forms.ValidationError(
+                'Trying to link with the existing task, but no '
+                'task ID specified'
+            )
+
+        return self.cleaned_data

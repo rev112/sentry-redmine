@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 import json
 
+from django import forms
 from django.utils.translation import ugettext_lazy as _
 from sentry.plugins.bases.issue import IssuePlugin
 from sentry.utils.cache import cache
@@ -70,6 +71,16 @@ class RedminePlugin(IssuePlugin):
         Create a Redmine issue
         """
         client = self.get_client(group.project)
+
+        if form_data.get('task_exists'):
+            issue_id = form_data.get('existing_task_number')
+            try:
+                client.get_issue(issue_id)
+            except Exception:
+                raise forms.ValidationError('Cannot fetch the specified issue')
+            else:
+                return issue_id
+
         default_priority = self.get_option('default_priority', group.project)
         if default_priority is None:
             default_priority = 4
@@ -109,7 +120,7 @@ class RedminePlugin(IssuePlugin):
         try:
             issue_data = client.get_issue(issue_id)
         except Exception:
-            issue_label = '<Removed>'
+            issue_label = '{} <unknown>'.format(num_label)
         else:
             issue_status = issue_data['issue']['status']
             issue_label = '{} ({})'.format(num_label, issue_status['name'])
