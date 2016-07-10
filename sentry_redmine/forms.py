@@ -3,6 +3,7 @@ import json
 
 from django import forms
 from django.utils.translation import ugettext_lazy as _
+from sentry.plugins.bases.issue import NewIssueForm
 
 from .client import RedmineClient
 
@@ -111,6 +112,17 @@ class RedmineOptionsForm(forms.Form):
         return json.dumps(extra_fields_dict, indent=4)
 
 
-class RedmineNewIssueForm(forms.Form):
-    title = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'class': 'span9'}))
-    description = forms.CharField(widget=forms.Textarea(attrs={'class': 'span9'}))
+class RedmineNewIssueForm(NewIssueForm):
+    pass
+
+
+class RedmineExistingIssueForm(forms.Form):
+    issue_id = forms.CharField(
+        label=_('Issue'),
+        widget=forms.TextInput(),
+        help_text=_('Redmine issue ID'))
+    comment = forms.CharField(
+        label=_('Redmine Comment'),
+        widget=forms.Textarea,
+        required=False,
+        help_text=_('Leave blank if you don\'t want to add a comment to the Redmine task'))

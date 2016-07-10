@@ -9,7 +9,7 @@ class RedmineClient(object):
         self.host = host.rstrip('/')
         self.key = key
 
-    def request(self, method, path, data=None):
+    def request(self, method, path, data=None, decode_response=True):
         headers = {
             'X-Redmine-API-Key': self.key,
             'Content-Type': "application/json",
@@ -17,7 +17,10 @@ class RedmineClient(object):
         url = '{}{}'.format(self.host, path)
         session = http.build_session()
         req = getattr(session, method.lower())(url, json=data, headers=headers)
-        return json.loads(req.text)
+        if decode_response:
+            return json.loads(req.text)
+        else:
+            return req
 
     def get_projects(self):
         limit = 100
@@ -42,6 +45,10 @@ class RedmineClient(object):
         response = self.request('GET', '/enumerations/issue_priorities.json')
         return response
 
+    def get_issue(self, issue_id):
+        response = self.request('GET', '/issues/{}.json'.format(issue_id))
+        return response['issue']
+
     def create_issue(self, data):
         response = self.request('POST', '/issues.json', data={
             'issue': data,
@@ -51,3 +58,8 @@ class RedmineClient(object):
             raise Exception('Unable to create redmine ticket')
 
         return response
+
+    def add_comment(self, issue_id, comment):
+        return self.request('PUT', '/issues/{}.json'.format(issue_id),
+                            data={'issue': {'notes': comment}},
+                            decode_response=False)
